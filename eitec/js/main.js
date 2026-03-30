@@ -82,33 +82,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ── ライトボックス ──
-  const lightbox = document.querySelector('.lightbox');
-  const lightboxImg = document.querySelector('.lightbox-img');
-  const lightboxClose = document.querySelector('.lightbox-close');
-
-  if (lightbox && lightboxImg) {
-    document.querySelectorAll('[data-lightbox]').forEach(el => {
-      el.addEventListener('click', () => {
-        lightboxImg.src = el.dataset.lightbox;
-        lightbox.classList.add('open');
-        document.body.style.overflow = 'hidden';
-      });
-    });
-    const closeLightbox = () => {
-      lightbox.classList.remove('open');
-      document.body.style.overflow = '';
-      lightboxImg.src = '';
-    };
-    if (lightboxClose) lightboxClose.addEventListener('click', closeLightbox);
-    lightbox.addEventListener('click', e => {
-      if (e.target === lightbox) closeLightbox();
-    });
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') closeLightbox();
-    });
-  }
-
   // ── アクティブナビ ──
   const currentPath = location.pathname.split('/').pop() || 'index.html';
   document.querySelectorAll('.header-nav a, .mobile-menu nav a').forEach(a => {

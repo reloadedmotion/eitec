@@ -902,11 +902,19 @@
   padding: var(--space-lg);
 }
 .lightbox.open { display: flex; }
+
 .lightbox-img {
   max-width: 90vw;
   max-height: 90vh;
   object-fit: contain;
+  transition: opacity 0.2s ease;
+  user-select: none;
+  -webkit-user-drag: none;
 }
+.lightbox-img.fade {
+  opacity: 0;
+}
+
 .lightbox-close {
   position: fixed;
   top: var(--space-md);
@@ -916,8 +924,56 @@
   cursor: pointer;
   opacity: 0.7;
   transition: opacity 0.2s;
+  z-index: 10001;
 }
 .lightbox-close:hover { opacity: 1; }
+
+/* 左右ナビ矢印（PC） */
+.lightbox-prev,
+.lightbox-next {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 52px;
+  height: 52px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  font-size: 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  z-index: 10001;
+}
+.lightbox-prev { left: 20px; }
+.lightbox-next { right: 20px; }
+.lightbox-prev:hover,
+.lightbox-next:hover {
+  background: rgba(255,255,255,0.25);
+  opacity: 1;
+}
+
+/* カウンター */
+.lightbox-counter {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: rgba(255,255,255,0.5);
+  font-family: var(--font-en);
+  font-size: 0.75rem;
+  letter-spacing: 0.15em;
+  z-index: 10001;
+}
+
+/* スマホではナビ矢印を非表示（スワイプで操作） */
+@media (max-width: 767px) {
+  .lightbox-prev,
+  .lightbox-next { display: none; }
+}
 
 /* ============================================
    Utilities

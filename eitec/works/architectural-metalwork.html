@@ -100,12 +100,99 @@
 <!-- ライトボックス -->
 <div class="lightbox" role="dialog" aria-label="画像拡大表示" aria-modal="true">
   <button class="lightbox-close" aria-label="閉じる">×</button>
+  <button class="lightbox-prev" aria-label="前の画像">&#8592;</button>
   <img class="lightbox-img" src="" alt="">
+  <button class="lightbox-next" aria-label="次の画像">&#8594;</button>
+  <div class="lightbox-counter"></div>
 </div>
 
 <footer class="footer" role="contentinfo"></footer>
 
+
 <script src="../js/footer.js"></script>
 <script src="../js/main.js"></script>
+<script>
+// ============================================================
+// WORKS ライトボックス（矢印ナビ + スワイプ対応）
+// ============================================================
+(function () {
+  const lightbox    = document.querySelector('.lightbox');
+  const lightboxImg = document.querySelector('.lightbox-img');
+  const btnClose    = document.querySelector('.lightbox-close');
+  const btnPrev     = document.querySelector('.lightbox-prev');
+  const btnNext     = document.querySelector('.lightbox-next');
+  const counter     = document.querySelector('.lightbox-counter');
+  if (!lightbox || !lightboxImg) return;
+
+  let images  = [];
+  let current = 0;
+
+  function getVisibleImages() {
+    return Array.from(document.querySelectorAll('.work-card[data-lightbox]'));
+  }
+
+  function showImage(index) {
+    current = (index + images.length) % images.length;
+    lightboxImg.classList.add('fade');
+    setTimeout(() => {
+      lightboxImg.src = images[current].dataset.lightbox;
+      lightboxImg.alt = images[current].querySelector('img')?.alt || '';
+      lightboxImg.classList.remove('fade');
+    }, 150);
+    counter.textContent = current + 1 + ' / ' + images.length;
+  }
+
+  function openLightbox(card) {
+    images  = getVisibleImages();
+    current = images.indexOf(card);
+    if (current === -1) current = 0;
+    lightboxImg.src = '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    showImage(current);
+  }
+
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxImg.src = '';
+  }
+
+  document.querySelectorAll('.work-card[data-lightbox]').forEach(function(card) {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', function() { openLightbox(card); });
+  });
+
+  btnClose.addEventListener('click', closeLightbox);
+  btnPrev.addEventListener('click', function() { showImage(current - 1); });
+  btnNext.addEventListener('click', function() { showImage(current + 1); });
+
+  lightbox.addEventListener('click', function(e) {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  document.addEventListener('keydown', function(e) {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape')     closeLightbox();
+    if (e.key === 'ArrowLeft')  showImage(current - 1);
+    if (e.key === 'ArrowRight') showImage(current + 1);
+  });
+
+  var touchStartX = 0;
+  var touchStartY = 0;
+  lightbox.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', function(e) {
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = e.changedTouches[0].clientY - touchStartY;
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      if (dx < 0) showImage(current + 1);
+      else         showImage(current - 1);
+    }
+  }, { passive: true });
+})();
+</script>
 </body>
 </html>

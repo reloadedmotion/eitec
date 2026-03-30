@@ -453,7 +453,10 @@
 <!-- ライトボックス -->
 <div class="lightbox" role="dialog" aria-label="画像拡大表示" aria-modal="true">
   <button class="lightbox-close" aria-label="閉じる">×</button>
+  <button class="lightbox-prev" aria-label="前の画像">&#8592;</button>
   <img class="lightbox-img" src="" alt="">
+  <button class="lightbox-next" aria-label="次の画像">&#8594;</button>
+  <div class="lightbox-counter"></div>
 </div>
 
 <footer class="footer" role="contentinfo"></footer>
@@ -461,15 +464,98 @@
 <script src="js/footer.js"></script>
 <script src="js/main.js"></script>
 <script>
-  // URLパラメータによるフィルター自動選択
-  const params = new URLSearchParams(location.search);
-  const cat = params.get('cat');
-  if (cat) {
-    document.addEventListener('DOMContentLoaded', () => {
-      const btn = document.querySelector(`.works-filter-btn[data-filter="${cat}"]`);
-      if (btn) btn.click();
-    });
+// ============================================================
+// WORKS ライトボックス（矢印ナビ + スワイプ対応）
+// ============================================================
+(function () {
+  const lightbox    = document.querySelector('.lightbox');
+  const lightboxImg = document.querySelector('.lightbox-img');
+  const btnClose    = document.querySelector('.lightbox-close');
+  const btnPrev     = document.querySelector('.lightbox-prev');
+  const btnNext     = document.querySelector('.lightbox-next');
+  const counter     = document.querySelector('.lightbox-counter');
+  if (!lightbox || !lightboxImg) return;
+
+  let images  = [];  // 表示中のカード（フィルター後）
+  let current = 0;
+
+  // ── 表示中カードリストを取得 ──
+  function getVisibleImages() {
+    return Array.from(document.querySelectorAll('.work-card[data-lightbox]'))
+      .filter(el => el.style.display !== 'none');
   }
+
+  // ── 画像切り替え（フェード） ──
+  function showImage(index) {
+    current = (index + images.length) % images.length;
+    lightboxImg.classList.add('fade');
+    setTimeout(() => {
+      lightboxImg.src = images[current].dataset.lightbox;
+      lightboxImg.alt = images[current].querySelector('img')?.alt || '';
+      lightboxImg.classList.remove('fade');
+    }, 150);
+    counter.textContent = `${current + 1} / ${images.length}`;
+  }
+
+  // ── 開く ──
+  function openLightbox(card) {
+    images  = getVisibleImages();
+    current = images.indexOf(card);
+    if (current === -1) current = 0;
+    lightboxImg.src = '';
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+    showImage(current);
+  }
+
+  // ── 閉じる ──
+  function closeLightbox() {
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+    lightboxImg.src = '';
+  }
+
+  // ── カードクリックで開く ──
+  document.querySelectorAll('.work-card[data-lightbox]').forEach(card => {
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', () => openLightbox(card));
+  });
+
+  // ── 矢印ボタン ──
+  btnClose.addEventListener('click', closeLightbox);
+  btnPrev.addEventListener('click', () => showImage(current - 1));
+  btnNext.addEventListener('click', () => showImage(current + 1));
+
+  // ── 背景クリックで閉じる ──
+  lightbox.addEventListener('click', e => {
+    if (e.target === lightbox) closeLightbox();
+  });
+
+  // ── キーボード操作 ──
+  document.addEventListener('keydown', e => {
+    if (!lightbox.classList.contains('open')) return;
+    if (e.key === 'Escape')     closeLightbox();
+    if (e.key === 'ArrowLeft')  showImage(current - 1);
+    if (e.key === 'ArrowRight') showImage(current + 1);
+  });
+
+  // ── スワイプ操作（スマホ） ──
+  let touchStartX = 0;
+  let touchStartY = 0;
+  lightbox.addEventListener('touchstart', e => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  }, { passive: true });
+  lightbox.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    const dy = e.changedTouches[0].clientY - touchStartY;
+    // 横スワイプが縦より大きい場合のみ反応
+    if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) {
+      if (dx < 0) showImage(current + 1);  // 左スワイプ → 次
+      else         showImage(current - 1);  // 右スワイプ → 前
+    }
+  }, { passive: true });
+})();
 </script>
 </body>
 </html>
